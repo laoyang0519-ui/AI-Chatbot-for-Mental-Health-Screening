@@ -15,6 +15,7 @@ An AI-powered mental health support chatbot for university students, built with 
 ---
 ## 🏗️ System Architecture
 
+```text
 WhatsApp User
       │
       ▼
@@ -32,16 +33,20 @@ AI Agent (OpenAI)
       │
       ▼
 Firebase Firestore
+```
 
 ---
 
 ## 📂 Project Structure
+
+```text
 AI-Mental-Health-Chatbot/
 │
 ├── README.md
 ├── workflow.json
 ├── poster.png
 └── demo.mp4
+```
 
 ---
 
