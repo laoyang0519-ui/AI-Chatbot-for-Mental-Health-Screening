@@ -1,5 +1,5 @@
 {
-  "name": "My workflow",
+  "name": "AI Mental Health Chatbot (WhatsApp)",
   "nodes": [
     {
       "parameters": {
@@ -223,13 +223,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.facebook.com/v22.0/1076336418893707/messages",
+        "url": "=https://graph.facebook.com/v22.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAMoapuDCvQBRH9tcsZBix1ZBvYUXne9DdibwYCjb6BqCXcFLK2iJojQjNCMOfPZCIdZB62H8rlrIsIOZApsG1AAPzDgoMD1uqeBRgHH3E2Pjtqoz9SNWpsepnAss2rJl5qI19nTVp1CtAZAmScZBoZBo8pJviZCykZB3U6pZANfFQjOjqUWfC5XROgZCaAUZB9wSZAQZDZD"
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
             },
             {
               "name": "Content-Type",
@@ -288,13 +288,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.facebook.com/v22.0/1076336418893707/messages",
+        "url": "=https://graph.facebook.com/v22.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAMoapuDCvQBRH9tcsZBix1ZBvYUXne9DdibwYCjb6BqCXcFLK2iJojQjNCMOfPZCIdZB62H8rlrIsIOZApsG1AAPzDgoMD1uqeBRgHH3E2Pjtqoz9SNWpsepnAss2rJl5qI19nTVp1CtAZAmScZBoZBo8pJviZCykZB3U6pZANfFQjOjqUWfC5XROgZCaAUZB9wSZAQZDZD"
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
             },
             {
               "name": "Content-Type",
@@ -353,7 +353,7 @@
             {
               "id": "48fc9475-51d0-465e-bb38-8c2c38e2f959",
               "name": "session_version",
-              "value": "={{ $('session_version + 1').item.json.session_version }}",
+              "value": "={{ $json.session_version }}",
               "type": "string"
             }
           ]
@@ -396,7 +396,7 @@
       "parameters": {
         "authentication": "serviceAccount",
         "operation": "upsert",
-        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "projectId": "={{ $env.FIREBASE_PROJECT_ID }}",
         "collection": "sessions",
         "updateKey": "SessionID",
         "columns": "SessionID, current_stage, last_update_time, session_version"
@@ -420,7 +420,7 @@
       "parameters": {
         "authentication": "serviceAccount",
         "operation": "upsert",
-        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "projectId": "={{ $env.FIREBASE_PROJECT_ID }}",
         "collection": "sessions",
         "updateKey": "SessionID",
         "columns": "SessionID, current_stage, last_update_time, session_version"
@@ -444,7 +444,7 @@
       "parameters": {
         "authentication": "serviceAccount",
         "operation": "create",
-        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "projectId": "={{ $env.FIREBASE_PROJECT_ID }}",
         "collection": "=sessions/{{ $('Prepare DB Data').first().json.SessionID }}_v{{ $('Prepare DB Data').first().json.session_version }}/messages",
         "columns": "UserMessage, AI_Reply, last_update_time, current_stage"
       },
@@ -466,7 +466,7 @@
     {
       "parameters": {
         "authentication": "serviceAccount",
-        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "projectId": "={{ $env.FIREBASE_PROJECT_ID }}",
         "collection": "sessions",
         "documentId": "={{ $json.SessionID }}"
       },
@@ -490,7 +490,7 @@
       "parameters": {
         "authentication": "serviceAccount",
         "operation": "create",
-        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "projectId": "={{ $env.FIREBASE_PROJECT_ID }}",
         "collection": "sessions",
         "documentId": "={{ $json.SessionID }}_v{{ $json.session_version }}",
         "columns": "SessionID, current_stage, last_update_time, session_version"
@@ -597,13 +597,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v18.0/1076336418893707/messages",
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.WHATSAPP_PHONE_ID }}/messages",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer EAAMoapuDCvQBRH9tcsZBix1ZBvYUXne9DdibwYCjb6BqCXcFLK2iJojQjNCMOfPZCIdZB62H8rlrIsIOZApsG1AAPzDgoMD1uqeBRgHH3E2Pjtqoz9SNWpsepnAss2rJl5qI19nTVp1CtAZAmScZBoZBo8pJviZCykZB3U6pZANfFQjOjqUWfC5XROgZCaAUZB9wSZAQZDZD"
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
             },
             {
               "name": "Content-Type",
@@ -613,7 +613,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"60108891182\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"🚨 *CRISIS ALERT: Lumi Safety Protocol Triggered!*\\n\\n*User Number:* {{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].from }}\\n*User Message:* \\\"{{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}\\\"\\n\\nPlease review and intervene immediately!\"\n  }\n}",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $env.ADMIN_PHONE }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"🚨 *CRISIS ALERT: Lumi Safety Protocol Triggered!*\\n\\n*User Number:* {{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].from }}\\n*User Message:* \\\"{{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}\\\"\\n\\nPlease review and intervene immediately!\"\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
