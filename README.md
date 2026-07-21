@@ -62,9 +62,24 @@ AI-Mental-Health-Chatbot/
 You can check the full project demonstration and poster via the link below:
 - 👉 [View Demo Video & Poster on Google Drive](https://drive.google.com/file/d/1Bb_RZPS7JSowgJomtBd3YhPfaM0yzVpy/view?usp=sharing)
 
+### Poster
 ![Poster](Poster.png)
+
 ---
 
+### Architecture
+![Architecture](Architecture.png)
+
+---
+
+### n8n Workflow
+![n8n Workflow](n8n Workflow.png)
+
+---
+### Firebase Firestore
+![Firestore Database](Firestore Database.png)
+
+---
 ## ⚙️ Setup & Installation
 1. Import `My workflow.json` into your **n8n** instance.
 2. Configure the required environment variables in n8n:
