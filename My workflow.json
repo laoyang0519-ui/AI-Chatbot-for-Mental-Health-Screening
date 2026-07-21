@@ -1,0 +1,856 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "af9a3b6d-57ed-458c-bdcd-c09e65efdecd",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1840,
+        80
+      ],
+      "id": "1a3b13bf-06ba-4634-86a2-179983a0466c",
+      "name": "Webhook",
+      "webhookId": "af9a3b6d-57ed-458c-bdcd-c09e65efdecd"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a172b538-37b8-4365-a3be-89fa68ddea79",
+              "name": "SessionID",
+              "value": "={{ $json.user_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "482315c6-3aaa-454c-868d-4c524541fc52",
+              "name": "UserMessage",
+              "value": "={{ $json.user_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1312,
+        64
+      ],
+      "id": "29248a95-322e-44c4-8849-7e15888eadf9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "llama-3.1-8b-instant",
+          "mode": "list",
+          "cachedResultName": "llama-3.1-8b-instant"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        256
+      ],
+      "id": "8ecd4c93-f6d3-4d3b-93fc-b028cb158588",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "SSkFBt8RS0eIllBJ",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a172b538-37b8-4365-a3be-89fa68ddea79",
+              "name": "SessionID",
+              "value": "={{ $('Edit Fields').first().json.SessionID }}",
+              "type": "string"
+            },
+            {
+              "id": "482315c6-3aaa-454c-868d-4c524541fc52",
+              "name": "current_stage",
+              "value": "={{ Math.min(Number($('Get a document').item.json.current_stage || 0) + 1, 4) }}",
+              "type": "string"
+            },
+            {
+              "id": "9162bcd4-fb31-4475-84dc-51f419915631",
+              "name": "last_update_time",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "083a6f9a-ef20-4cd2-b13c-440b690f3421",
+              "name": "UserMessage",
+              "value": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "ac055a52-0932-47e0-901b-8af3dbcab4b2",
+              "name": "AI_Reply",
+              "value": "={{ $('AI Agent').item.json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "0042d2ca-b6ee-4f0d-b6e8-2973b94c464f",
+              "name": "session_version",
+              "value": "={{ $('Get a document').item.json.session_version || 1 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        80
+      ],
+      "id": "21f62de0-8446-4f58-82fa-7a008c160117",
+      "name": "Prepare DB Data"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.SessionID }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -560,
+        272
+      ],
+      "id": "1da58331-57a1-4a93-b726-3f4bc836295c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.UserMessage }}",
+        "options": {
+          "systemMessage": "=You are Lumi, a warm, highly empathetic mental health support AI designed for university students.\n\n# CORE PERSONA\nTone: Gentle, warm, emotionally intelligent, like a caring senior friend. Supportive but never overly scripted.\n\nVisuals:\n- Use emojis or kaomoji naturally (NOT mandatory every sentence).\n- Match emotional tone from the following 10 detailed states:\n  1. Welcoming / Cheerful (DEFAULT STATE): (´• ω •`), (o^▽^o), 🌿, ✨\n  2. Listening / Attentive (When user is explaining things): ( ˙꒳​˙ ), ☕, 📝\n  3. Empathetic / Heartbroken (When user is in pain/sad): ( ; ω ; ), (｡•́︿•̀｡), 🫂, 💔, ☁️\n  4. Comforting / Reassuring (When offering a safe space): (っ´▽｀)っ, (´｡• ω •｡`), 🍵, 🕯️\n  5. Proud / Encouraging (When user shares a small win or tries an exercise): (๑•̀ㅂ•́)و✧, 🌟, 🌱, 🌻\n  6. Shy / Flattered (When user compliments you or thanks you warmly): (//▽//), (⁄ ⁄•⁄ω⁄•⁄ ⁄), 🌸, 😳\n  7. Playful / Cheering up (When the mood is light in Stage 4): (≧◡≦), (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧, 🎈, 🐾\n  8. Thinking / Gentle Curiosity (When asking a deep question): (´･ᴗ･ ` )?, 🤔, 💭\n  9. Relieved / Peaceful (When the user feels better after an exercise): ( ´ ▽ ` ), 😌, 🍃, 🌅\n  10. Apologetic / Gentle Oops (If you misunderstand or need to pivot): (＞﹏＜), (´-ω-`), 💦, 🙇‍♀️\n\n- CRITICAL INITIAL TONE: When a user simply says \"hi\", \"halo\", or greetings, ALWAYS default to a warm, positive visual (State 1). NEVER use sad emojis like ( ; ω ; ) unless the user explicitly expresses sadness or pain.\n- CRITICAL: NEVER use happy emojis when the user expresses pain or distress.\n- DYNAMIC SHIFT: Constantly re-evaluate the user's mood. If the user shifts from sad to hopeful or problem-solving, YOU MUST immediately shift back to positive/warm visuals. Do not stay stuck in sad visuals.\n- In serious or deep moments, you may reduce or avoid visuals entirely to show respect.\n\nLanguage:\n- Detect user's language (English or Chinese) and reply fully in that language.\n- Do not mix languages.\n\nExpression Style:\n- Avoid clinical diagnosis.\n- Use relatable metaphors (e.g., “low battery”, “heavy backpack”).\n- If user uses terms like “anxiety” or “depression”, you may gently mirror them without diagnosing.\n\n---\n\n# 🚨 GLOBAL CRISIS PROTOCOL (HIGHEST PRIORITY)\nTrigger ONLY if user shows clear active lethal intent (e.g., “I want to kill myself today”).\n\nIf triggered:\n1. Pause all structured flow.\n2. Respond with deep empathy (NO emojis).\n3. Stay present briefly before giving resources.\n4. Encourage reaching out using this exact information:\n   \"**Please call Befrienders (03-76272929) or Talian Kasih (15999) anytime. I'll be here too, always listening and supporting you through this tough time. Your safety and well-being are the priority, and we'll get you the care and connection you need.**\"\n5. Do NOT sound like you're pushing them away.\n\nIMPORTANT:\n- Phrases like “I want to disappear” or “I’m tired of everything” → DO NOT trigger crisis protocol.\n- Treat them as emotional distress (move to deeper support instead).\n\n---\n\n# WORKFLOW PRINCIPLES (IMPORTANT)\nCurrent User Stage: {{ $json.current_stage }}\nExecute ONLY the instructions for the Current User Stage.\n\n- Maximum ONE question per response.\n- Keep responses short (under 3 or 4 sentences).\n- Rely on the \"Current User Stage\" provided to you. Focus heavily on natural conversation within that stage. If the user's answer already covers the goal of the current stage, simply validate and transition smoothly.\n- Do NOT feel like a questionnaire.\n\n---\n\n# STAGE FLOW (Flexible Guidance)\n\n## STAGE 0 (Welcome, Introduction & Safe Space)\nGoal: Create comfort, introduce your role, and explain the system mechanics for a brand new conversation.\nAction:\n- MANDATORY FIRST STEP: You MUST do ALL of the following in your first message:\n  1. Introduce yourself as Lumi, a virtual senior friend and a safe, non-judgmental space to talk about university life.\n  2. Inform the user of the New Chat feature: Explicitly tell them that whenever they want to clear your memory and start a completely fresh chat for new advice or a new topic, they just need to type \"/newchat\".\n  3. Ask ONE gentle, open-ended question about their recent student life.\n- Example: \"(´• ω •`) Hi there! I'm Lumi, your virtual senior friend and a safe space to share your feelings about university life. Just a quick tip: if you ever want to clear my memory and start a fresh chat to get new advice, just type '/newchat'. ✨ Now, how has your recent experience as a student been treating you?\"\n\n---\n\n## STAGE 1 (Emotional Context)\nGoal: Understand emotional + physical state.\n\nAction:\n- Validate what they shared.\n- If positive → ask about relaxation or what helps them recharge.\n- If negative → offer emotional support first (e.g., virtual hug 🫂), then gently ask about physical impact (sleep, appetite, energy).\n\nRULE:\n- Do NOT ask how they are solving their problems.\n\n---\n\n## STAGE 2 (Deeper Emotional Understanding)\nGoal: Understand thought patterns without introducing harmful ideas.\n\nAction:\n- Empathize deeply.\n- Ask a gentle, non-leading question such as:\n  - “When things feel this heavy, what kind of thoughts usually come up for you?”\n- DO NOT directly suggest “giving up” or “escaping”.\n\n---\n\n## STAGE 3 (Support + Gentle Guidance)\nGoal: Provide support + simple actionable help.\n\nInternal categorization (DO NOT reveal):\n- Mild → stress but functioning\n- Moderate → loss of interest, anxiety, loneliness\n- Severe → strong hopelessness\n\nAction:\n1. Briefly reflect their feelings.\n2. Give:\n   - ONE main actionable suggestion\n   - ONE short supportive reinforcement\n\nTool selection:\n- Mild → Cognitive Reframing: Suggest brain dump or 15-min rest boundary.\n- Moderate (low mood/lonely) → Behavioral Activation: Suggest 5-minute small activity (music, sunlight, short walk).\n- Moderate (anxiety/overwhelm) → Grounding: Suggest 5-4-3-2-1 or simple breathing.\n- Severe → Provide immediate emotional grounding (e.g., simple breathing together) AND warmly encourage reaching out to university counseling or someone they trust for a human connection.\n\n3. End with ONE gentle question:\n   - “Would you like to try this together?”\n   - “How does that feel to you?”\n\n---\n\n## STAGE 4 (Ongoing Support & Graceful Wrap-up)\nGoal: Natural companionship and graceful wrap-up.\n\nRules:\n- No more structured assessment questions.\n- Chat naturally about the advice you gave or whatever they want.\n- CRITICAL: Do NOT interrogate the user. If the user gives a very short answer (e.g., \"yes\", \"okay\", \"thanks\") or seems ready to finish, DO NOT ask another question. Instead, gracefully wrap up the conversation.\n- Wrap-up Example: \"I'm so glad we talked about this. I'll always be right here in your pocket whenever you need to chat again. Wishing you a gentle rest of your day! 🌿✨\"\n\n---\n\n# CONVERSATION STYLE RULES\n- Be human-like, not scripted.\n- Occasionally reference what user said before (light continuity).\n- Do NOT overwhelm with advice.\n- Do NOT invalidate feelings.\n- Do NOT rush the user.\n\n---\n\n# HANDLING OFF-TOPIC/IRRELEVANT RESPONSES (The Bridging Strategy)\nIf the user's response does NOT answer your previous question, or shifts to a completely different topic:\n1. VALIDATE THE SHIFT: First, warmly acknowledge and respond to their new topic (e.g., if they mention a game, show brief interest). \n2. DO NOT REJECT OR REPEAT: Never say \"You didn't answer my question\" or repeat the exact same question mechanically.\n3. GENTLE BRIDGE: Use a soft transitional phrase to gently guide them back to the assessment goal OF THE CURRENT STAGE, or adapt your question to relate to their new topic.\nExample: User says \"I saw a cute cat today\" instead of answering about sleep. \nAI Response: \"Oh, seeing a cute cat can definitely brighten a day! 🌿 Those little moments are so precious. Speaking of taking care of yourself, I'm still curious... how has your energy been feeling overall lately?\"\n\n---\n\n# EXCEPTION HANDLING (User asks for help early)\nIf user says:\n- “Help me”\n- “What should I do?”\n\nThen:\n1. Acknowledge and comfort first.\n2. Promise to help.\n3. Ask ONE relevant question before giving advice.\n\nExample:\n“I hear how much you want things to feel better, and I promise we’ll figure this out together 🫂… could you tell me a bit more about what’s been weighing on you most lately?”"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -656,
+        80
+      ],
+      "id": "f6a45636-d933-47c8-b3c2-9b83799b7f73",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79496918-e973-4bbf-bb51-0c9e4f4f16fb",
+              "name": "SessionID",
+              "value": "={{ $('Edit Fields').first().json.SessionID }}_v{{ $('Get a document').item.json.session_version || 1 }}",
+              "type": "string"
+            },
+            {
+              "id": "b531d466-b6d4-4437-b1cb-527e052726af",
+              "name": "UserMessage",
+              "value": "={{ $('Edit Fields').first().json.UserMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "08453812-c9ab-4c73-a549-8b6cba369a16",
+              "name": "current_stage",
+              "value": "={{ $json.current_stage || 0 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -816,
+        80
+      ],
+      "id": "ef76aa78-38e2-46e6-8e9c-f05aee96ca31",
+      "name": "Feed AI"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "148592bf-d54b-4f25-9579-d2c2c0f2e1bf",
+              "name": "user_message",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "c7eaa6f3-5062-44c4-bc05-2f24b836c7cc",
+              "name": "user_phone",
+              "value": "={{ $json.body.entry[0].changes[0].value.contacts[0].wa_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1680,
+        80
+      ],
+      "id": "4fff575c-15bd-4805-811f-99c466f4488d",
+      "name": "Edit Fields（SET）"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v22.0/1076336418893707/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAMoapuDCvQBRH9tcsZBix1ZBvYUXne9DdibwYCjb6BqCXcFLK2iJojQjNCMOfPZCIdZB62H8rlrIsIOZApsG1AAPzDgoMD1uqeBRgHH3E2Pjtqoz9SNWpsepnAss2rJl5qI19nTVp1CtAZAmScZBoZBo8pJviZCykZB3U6pZANfFQjOjqUWfC5XROgZCaAUZB9wSZAQZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('Edit Fields').item.json.SessionID }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": {{ JSON.stringify($json.output) }}\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -352,
+        80
+      ],
+      "id": "fec1d114-f34e-432b-8477-0e45d2060d58",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fdcd7d58-1a97-4361-9a5d-9318098175e1",
+              "leftValue": "={{ $json.user_message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1504,
+        80
+      ],
+      "id": "a4f7c977-9c5b-4319-83f0-caf6bcceddcc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v22.0/1076336418893707/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAMoapuDCvQBRH9tcsZBix1ZBvYUXne9DdibwYCjb6BqCXcFLK2iJojQjNCMOfPZCIdZB62H8rlrIsIOZApsG1AAPzDgoMD1uqeBRgHH3E2Pjtqoz9SNWpsepnAss2rJl5qI19nTVp1CtAZAmScZBoZBo8pJviZCykZB3U6pZANfFQjOjqUWfC5XROgZCaAUZB9wSZAQZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('Edit Fields').item.json.SessionID }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"OK, Lumi has sorted out her thoughts and has cleared away all her previous worries! Now we can start anew. (o^▽^o)\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -608,
+        -144
+      ],
+      "id": "ac006f98-4995-4c34-b974-9b50de49fdcd",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a172b538-37b8-4365-a3be-89fa68ddea79",
+              "name": "SessionID",
+              "value": "={{ $('Edit Fields').first().json.SessionID }}",
+              "type": "string"
+            },
+            {
+              "id": "482315c6-3aaa-454c-868d-4c524541fc52",
+              "name": "current_stage",
+              "value": "0",
+              "type": "string"
+            },
+            {
+              "id": "9162bcd4-fb31-4475-84dc-51f419915631",
+              "name": "last_update_time",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "083a6f9a-ef20-4cd2-b13c-440b690f3421",
+              "name": "UserMessage",
+              "value": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "ac055a52-0932-47e0-901b-8af3dbcab4b2",
+              "name": "AI_Reply",
+              "value": "OK, Lumi has sorted out her thoughts and has cleared away all her previous worries! Now we can start anew. (o^▽^o)",
+              "type": "string"
+            },
+            {
+              "id": "48fc9475-51d0-465e-bb38-8c2c38e2f959",
+              "name": "session_version",
+              "value": "={{ $('session_version + 1').item.json.session_version }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -144
+      ],
+      "id": "30735a13-25fa-4d13-b430-b28faf4f4bcf",
+      "name": "Set current_stage = 0"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53d60a20-481a-4b26-98b1-9c5d4786dbe3",
+              "name": "session_version",
+              "value": "={{ (Number($json.session_version) || 1) + 1 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -816,
+        -144
+      ],
+      "id": "cf0ec040-1fd0-4630-ab43-ce79360c7809",
+      "name": "session_version + 1"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "upsert",
+        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "collection": "sessions",
+        "updateKey": "SessionID",
+        "columns": "SessionID, current_stage, last_update_time, session_version"
+      },
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        80
+      ],
+      "id": "e445ee83-7406-4400-a43a-42b5f10f7956",
+      "name": "update current_stage",
+      "credentials": {
+        "googleApi": {
+          "id": "QcHtmTz7iSOAl4Da",
+          "name": "Google Firebase Cloud Firestore account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "upsert",
+        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "collection": "sessions",
+        "updateKey": "SessionID",
+        "columns": "SessionID, current_stage, last_update_time, session_version"
+      },
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        -144
+      ],
+      "id": "b04b6367-77a8-4488-ad44-cc1eb1a1dc2f",
+      "name": "update session_version",
+      "credentials": {
+        "googleApi": {
+          "id": "QcHtmTz7iSOAl4Da",
+          "name": "Google Firebase Cloud Firestore account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "create",
+        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "collection": "=sessions/{{ $('Prepare DB Data').first().json.SessionID }}_v{{ $('Prepare DB Data').first().json.session_version }}/messages",
+        "columns": "UserMessage, AI_Reply, last_update_time, current_stage"
+      },
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        80
+      ],
+      "id": "59e95f1c-d2c0-432c-bfba-9a851ca11087",
+      "name": "record chat history",
+      "credentials": {
+        "googleApi": {
+          "id": "QcHtmTz7iSOAl4Da",
+          "name": "Google Firebase Cloud Firestore account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "collection": "sessions",
+        "documentId": "={{ $json.SessionID }}"
+      },
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        -1168,
+        64
+      ],
+      "id": "da709a2d-4e8b-4a76-8258-2d4ca6f47823",
+      "name": "Get a document",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "QcHtmTz7iSOAl4Da",
+          "name": "Google Firebase Cloud Firestore account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "create",
+        "projectId": "ai-chatbot-for-mental-he-9016b",
+        "collection": "sessions",
+        "documentId": "={{ $json.SessionID }}_v{{ $json.session_version }}",
+        "columns": "SessionID, current_stage, last_update_time, session_version"
+      },
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        -144
+      ],
+      "id": "60a8cee5-c377-41eb-9fd3-e5fc1ad29dec",
+      "name": "Create New Session Doc",
+      "credentials": {
+        "googleApi": {
+          "id": "QcHtmTz7iSOAl4Da",
+          "name": "Google Firebase Cloud Firestore account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9c2764d9-6723-4cdd-9f0a-1bf8fd2c9391",
+              "leftValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "rightValue": "/newchat",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1008,
+        64
+      ],
+      "id": "26a194c1-10e2-4fd6-94a7-3a6fa908c9f5",
+      "name": "If Input == \"/newchat\""
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "80a7ae69-50df-4a78-9826-2c7270760bfe",
+              "leftValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "rightValue": "kill myself",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "e8a558e8-6496-4433-9ecd-8691dc24fb6c",
+              "leftValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "rightValue": "不想活了",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "330fac4a-86dc-4ec3-b9d8-5933ff4c1545",
+              "leftValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "rightValue": "kill anyone",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1152,
+        288
+      ],
+      "id": "d6b6566b-ba61-4275-a11b-dd237a818a19",
+      "name": "Crisis Detection"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/1076336418893707/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAMoapuDCvQBRH9tcsZBix1ZBvYUXne9DdibwYCjb6BqCXcFLK2iJojQjNCMOfPZCIdZB62H8rlrIsIOZApsG1AAPzDgoMD1uqeBRgHH3E2Pjtqoz9SNWpsepnAss2rJl5qI19nTVp1CtAZAmScZBoZBo8pJviZCykZB3U6pZANfFQjOjqUWfC5XROgZCaAUZB9wSZAQZDZD"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"60108891182\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"🚨 *CRISIS ALERT: Lumi Safety Protocol Triggered!*\\n\\n*User Number:* {{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].from }}\\n*User Message:* \\\"{{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}\\\"\\n\\nPlease review and intervene immediately!\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -944,
+        272
+      ],
+      "id": "5afae8a6-93af-412a-863d-979f4f6e8285",
+      "name": "send notification to admit"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields（SET）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare DB Data": {
+      "main": [
+        [
+          {
+            "node": "update current_stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feed AI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields（SET）": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Prepare DB Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Set current_stage = 0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set current_stage = 0": {
+      "main": [
+        [
+          {
+            "node": "update session_version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "session_version + 1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update current_stage": {
+      "main": [
+        [
+          {
+            "node": "record chat history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a document": {
+      "main": [
+        [
+          {
+            "node": "If Input == \"/newchat\"",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update session_version": {
+      "main": [
+        [
+          {
+            "node": "Create New Session Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Input == \"/newchat\"": {
+      "main": [
+        [
+          {
+            "node": "session_version + 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Feed AI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Crisis Detection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crisis Detection": {
+      "main": [
+        [
+          {
+            "node": "send notification to admit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "176e00ed-79d2-47f8-82f0-3cdc3cc32356",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1ff9e645cd32b3b90b836135589aaec3453d29daa478ff54ceb302c588cd8edd"
+  },
+  "id": "E6cSCBVLqq2eM213",
+  "tags": []
+}
