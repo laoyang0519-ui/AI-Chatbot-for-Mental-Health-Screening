@@ -73,11 +73,11 @@ You can check the full project demonstration and poster via the link below:
 ---
 
 ### n8n Workflow
-![n8n Workflow](n8n Workflow.png)
+![n8n Workflow](n8n_Workflow.png)
 
 ---
 ### Firebase Firestore
-![Firestore Database](Firestore Database.png)
+![Firestore Database](Firestore_Database.png)
 
 ---
 ## ⚙️ Setup & Installation
